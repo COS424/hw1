@@ -5,7 +5,8 @@ clear all; close all;
 addpath(fullfile('tools'));
 
 % Setup vlfeat
-run('lib/vlfeat/toolbox/vl_setup');
+addpath(fullfile('lib','vlfeat','toolbox'));
+vl_setup;
 
 % Load music data and their category labels
 [data, labels, filenames] = loadAll('.');
@@ -38,13 +39,17 @@ pred = cellfun(@str2num,pred);
 accuracy = sum(pred == testingLabels')/length(testingLabels);
 fprintf('Accuracy (random forests): %f\n', accuracy);
 
-% Train k-nearest neighbor classifer
+% Train k-nearest neighbor classifier
 model = fitcknn(trainingData',trainingLabels');
 [pred,scores] = predict(model,testingData');
 accuracy = sum(pred == testingLabels')/length(testingLabels);
 fprintf('Accuracy (k-nearest neighbor): %f\n', accuracy);
 
-
+% Train multi-class linear SVM classifier
+model = fitcecoc(trainingData',trainingLabels');
+[pred,scores] = predict(model,testingData');
+accuracy = sum(pred == testingLabels')/length(testingLabels);
+fprintf('Accuracy (multi-class SVM): %f\n', accuracy);
 
 
 
