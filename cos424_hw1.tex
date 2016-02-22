@@ -1,0 +1,72 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{cos424,times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{graphicx}
+
+
+\title{Formatting Instructions for COS 424 Homeworks and Project}
+
+
+\author{
+Riley Simmons-Edler\\
+Princeton CS Department\\
+\texttt{rileys@princeton.edu} \\
+\And
+Andy Zeng \\
+Princeton CS Department \\
+\texttt{andy.zeng.workhorse@gmail.com} \\
+}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{Introduction}
+
+All homework submissions are limited to four pages of text (with additional pages for bibliography). The final project is limited to eight pages of text (with additional pages for bibliography). Note that any homework or project submissions that exceed these page limits will not be read.
+
+\section{Related Work}
+
+\section{Methods}
+
+\section{Results}
+
+%Figure: Histogram performance by music genre
+
+%Table: Performance table by classifier. Show accuracy, precision, recall, F1, runtime(?)
+
+\begin{table}[h!]
+  \centering
+  \caption{Table of performance metrics for each classifier used.}
+  \label{tab:performance}
+  \begin{tabular}{|l|l|l|l|l|l|}
+    \hline
+    Classifier & Accuracy & Precision & Recall & F1 & Runtime\\\hline
+    KNN & 0.670 & ??? & ??? & ??? & ???\\\hline    
+    SVM & 0.650 & ??? & ??? & ??? & ???\\\hline
+    RF & 0.645 & ??? & ??? & ??? & ???\\\hline    
+  \end{tabular}
+\end{table}
+
+%Figure: Histogram of performance by confidence bin
+
+%Figure: PR Curves.
+
+%Figure: Features selected by feature selection? 
+
+\section{Discussion and Conclusion}
+
+\subsubsection*{Acknowledgments}
+
+
+\bibliography{ref}
+
+\end{document}
