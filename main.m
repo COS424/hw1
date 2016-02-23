@@ -1,99 +1,103 @@
-%% Setup
-% Clear Matlab workspace
-clear all; close all;
-fprintf('Loading data...\n');
-
-% Add assignment tools
-addpath(fullfile('tools'));
-
-% Setup libraries
-addpath(fullfile('lib','vlfeat','toolbox'));
-vl_setup;
-addpath(fullfile('lib','tsne'));
-
-% Load music data and their category labels
-[data, labels, filenames] = loadAll('.');
-
-%% Feature Analysis
-% Extract and aggregate all frame-level features
-fprintf('Collecting frame-level features...\n');
-feat = {};
-featNames = {'MFCC','Chroma','Energy','Zero-Crossing','Spectral Flux','Roughness','Key Strength','HCDF','Inharmonicity'};
-for i = 1:length(data); currFeat{i} = data{i}.mfc; end; feat{1} = currFeat; % mfcc
-for i = 1:length(data); currFeat{i} = data{i}.chroma; end; feat{2} = currFeat; % chroma
-for i = 1:length(data); currFeat{i} = data{i}.eng; end; feat{3} = currFeat; % energy
-for i = 1:length(data); currFeat{i} = data{i}.zerocross; end; feat{4} = currFeat; % zero-crossing
-for i = 1:length(data); currFeat{i} = data{i}.brightness; end; feat{5} = currFeat; % spectral flux
-for i = 1:length(data); currFeat{i} = data{i}.roughness; end; feat{6} = currFeat; % roughness
-for i = 1:length(data); currFeat{i} = data{i}.keystrength; end; feat{7} = currFeat; % key strength
-for i = 1:length(data); currFeat{i} = data{i}.hcdf; end; feat{8} = currFeat; % hcdf
-for i = 1:length(data); tmpInharmonic = data{i}.inharmonic; tmpInharmonic(find(isnan(tmpInharmonic))) = 0; currFeat{i} = tmpInharmonic; end; feat{9} = currFeat; % inharmonicity
-
-% Generate Fisher Vectors for all frame-level features
-fprintf('Generating Fisher Vectors...\n');
-fv = {};
-for i = 1:length(feat)
-    i
-    GENDATA.data = feat{i};
-    GENDATA.class = labels;
-    GENDATA.classnames = {'Blues', 'Classical', 'Country', 'Disco', 'Hiphop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'};
-    fv{i} = demo_fv(GENDATA, 3, 3);
-end
-
-% Compute t-SNE embedding of features
-for i = 1:length(feat)
-    tsneData = tsne(fv{i}',[]);
-    palette = [255/255,   0/255,   0/255;...
-               255/255, 154/255,   0/255;...
-               254/255, 255/255,   0/255;...
-               186/255, 232/255,   6/255;...
-                46/255, 206/255,  12/255;...
-                12/255, 153/255, 206/255;...
-                12/255,  91/255, 206/255;...
-                31/255,  12/255, 206/255;...
-               128/255,  12/255, 206/255;...
-               206/255,  12/255, 130/255];
-
-    classes = {};
-    for j = 1:1000
-        classes{j} = GENDATA.classnames{labels(j)};
-    end
-    hfig = figure();
-    gscatter(tsneData(:,1),tsneData(:,2),classes',palette,'.',25); 
-    set(hfig, 'Position', [1 1 1000 1000]);
-    hold on; title(featNames(i)); hold off;
-end
-
-% %% Classification
-% % Randomly split data ratio 8:2 training:testing
-% % Stratified 10-fold cross validation
-% trainingData = {}; trainingLabels = {};
-% testingData = {}; testingLabels = {};
-% for k = 1:10
-%     randIDX = randsample(1:length(data),length(data));
-%     trainingData{k} = fv(:,randIDX(1:800));
-%     trainingLabels{k} = labels(:,randIDX(1:800));
-%     testingData{k} = fv(:,randIDX(801:1000));
-%     testingLabels{k} = labels(:,randIDX(801:1000));
+% %% Setup
+% % Clear Matlab workspace
+% clear all; close all;
+% fprintf('Loading data...\n');
+% 
+% % Add assignment tools
+% addpath(fullfile('tools'));
+% 
+% % Setup libraries
+% addpath(fullfile('lib','vlfeat','toolbox'));
+% vl_setup;
+% addpath(fullfile('lib','tsne'));
+% 
+% % Load music data and their category labels
+% [data, labels, filenames] = loadAll('.');
+% 
+% %% Feature Analysis
+% % Extract and aggregate all frame-level features
+% fprintf('Collecting frame-level features...\n');
+% feat = {};
+% featNames = {'MFCC','Chroma','Zero-Crossing','Spectral Flux','HCDF'};
+% for i = 1:length(data); currFeat{i} = data{i}.mfc; end; feat{1} = currFeat; % mfcc
+% for i = 1:length(data); currFeat{i} = data{i}.chroma; end; feat{2} = currFeat; % chroma
+% for i = 1:length(data); currFeat{i} = data{i}.zerocross; end; feat{3} = currFeat; % zero-crossing
+% for i = 1:length(data); currFeat{i} = data{i}.brightness; end; feat{4} = currFeat; % spectral flux
+% for i = 1:length(data); currFeat{i} = data{i}.hcdf; end; feat{5} = currFeat; % hcdf
+% 
+% % Generate Fisher Vectors for all frame-level features
+% fprintf('Generating Fisher Vectors...\n');
+% fv = [];
+% for i = 1:length(feat)
+%     GENDATA.data = feat{i};
+%     GENDATA.class = labels;
+%     GENDATA.classnames = {'Blues', 'Classical', 'Country', 'Disco', 'Hiphop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'};
+%     fv = [fv; demo_fv(GENDATA, 3, 3)];
 % end
 % 
-% % Train k-nearest neighbor classifier
-% accuracy = [];
-% for k = 1:10
-%     model = fitcknn(trainingData{k}',trainingLabels{k}');
-%     [pred,scores] = predict(model,testingData{k}');
-%     accuracy = [accuracy; sum(pred == testingLabels{k}')/length(testingLabels{k})];
-% end
-% fprintf('Accuracy (k-nearest neighbor): %f\n', mean(accuracy));
+% 
+%% Classification
+% Randomly split data ratio 8:2 training:testing
+% Stratified 10-fold cross validation
+trainingData = {}; trainingLabels = {};
+testingData = {}; testingLabels = {};
+for k = 1:10
+    randIDX = randsample(1:length(data),length(data));
+    trainingData{k} = fv(:,randIDX(1:800));
+    trainingLabels{k} = labels(:,randIDX(1:800));
+    testingData{k} = fv(:,randIDX(801:1000));
+    testingLabels{k} = labels(:,randIDX(801:1000));
+end
+
+% Train all classifiers
+for classifierIDX = 1:1
+    prec = []; rec = [];
+    acc = []; conf = [];
+    timeTrain = []; timeTest = [];
+    
+    % Stratified k-fold cross-validation
+    for k = 1:10
+        [pred, scores, tmpTimeTrain, tmpTimeTest] = featClassify(trainingData{k}', trainingLabels{k}', testingData{k}', classifierIDX);
+        timeTrain = [timeTrain; tmpTimeTrain];
+        timeTest = [timeTest; tmpTimeTest];
+        tAcc = sum(pred == testingLabels{k}')/length(testingLabels{k})
+        
+        % Compute PR per category
+        for categ = 1:10
+            tGT = double(testingLabels{k}' == categ);
+            tGT(find(tGT == 0)) = -1;
+            [tRec,tPrec,tInfo] = vl_pr(tGT,scores(:,categ));
+            
+%             for conf = 0:0.001:1
+%                 tPred = scores(:,categ) >= conf;
+%                 tGT = testingLabels{k}' == categ;
+%                 [tScores,sortIDX] = sort(scores(:,categ));
+%                 tPred = tPred(sortIDX); tGT = tGT(sortIDX);
+%                 if length(find(tPred)) == 0 || length(find(~tPred)) == 0
+%                     continue;
+%                 end
+%                 TP = sum((tGT(find(tPred))-tPred(find(tPred))) == 0)/length(find(tPred));
+%                 FP = sum((tGT(find(tPred))-tPred(find(tPred))) == -1)/length(find(tPred));
+%                 FN = sum((tGT(find(~tPred))-tPred(find(~tPred))) == 1)/length(find(~tPred));
+%                 tPrec = [tPrec;TP/(TP+FP)];
+%                 tRec = [tRec;TP/(TP+FN)];
+%             end
+%             ap =  sum(tPrec(2:end).*(tRec(2:end)-tRec(1:(end-1))));
+        end
+
+    end
+    % fprintf('Accuracy (k-nearest neighbor): %f\n', mean(accuracy));
+end
 
 % % Train multi-class linear SVM classifier
 % model = fitcecoc(trainingData',trainingLabels');
 % [pred,scores] = predict(model,testingData');
 % accuracy = sum(pred == testingLabels')/length(testingLabels);
 % fprintf('Accuracy (multi-class SVM): %f\n', accuracy);
-% 
+
+
 % % Train random forest classifier
-% model = TreeBagger(100,trainingData',trainingLabels','MinLeafSize',5);
+% model = TreeBagger(100,trainingData',trainingLabels','MinLeafSize',5,'CrossVal','on');
 % [pred,scores] = predict(model,testingData');
 % pred = cellfun(@str2num,pred);
 % accuracy = sum(pred == testingLabels')/length(testingLabels);

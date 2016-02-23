@@ -33,7 +33,6 @@ for i = 1:length(data); tmpInharmonic = data{i}.inharmonic; tmpInharmonic(find(i
 fprintf('Generating Fisher Vectors...\n');
 fv = {};
 for i = 1:length(feat)
-    i
     GENDATA.data = feat{i};
     GENDATA.class = labels;
     GENDATA.classnames = {'Blues', 'Classical', 'Country', 'Disco', 'Hiphop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'};
