@@ -34,73 +34,47 @@
 %     GENDATA.classnames = {'Blues', 'Classical', 'Country', 'Disco', 'Hiphop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'};
 %     fv = [fv; demo_fv(GENDATA, 3, 3)];
 % end
-% 
-% 
+
+
 %% Classification
-% Randomly split data ratio 8:2 training:testing
-% Stratified 10-fold cross validation
-trainingData = {}; trainingLabels = {};
-testingData = {}; testingLabels = {};
+% Stratified 10-fold cross validation (4:1 trainin:validation ratio)
+cvTrainData = {}; cvTrainLabels = {};
+cvTestData = {}; cvTestLabels = {};
 for k = 1:10
     randIDX = randsample(1:length(data),length(data));
-    trainingData{k} = fv(:,randIDX(1:800));
-    trainingLabels{k} = labels(:,randIDX(1:800));
-    testingData{k} = fv(:,randIDX(801:1000));
-    testingLabels{k} = labels(:,randIDX(801:1000));
+    cvTrainData{k} = fv(:,randIDX(1:800));
+    cvTrainLabels{k} = labels(:,randIDX(1:800));
+    cvTestData{k} = fv(:,randIDX(801:1000));
+    cvTestLabels{k} = labels(:,randIDX(801:1000));
 end
 
-% Train all classifiers
-for classifierIDX = 1:1
-    prec = []; rec = [];
-    acc = []; conf = [];
-    timeTrain = []; timeTest = [];
-    
-    % Stratified k-fold cross-validation
+% Final distribution: randomly split data ratio 4:1 training:testing
+randIDX = randsample(1:length(data),length(data));
+finTrainData = fv(:,randIDX(1:800));
+finTrainLabels = labels(:,randIDX(1:800));
+finTestData = fv(:,randIDX(801:1000));
+finTestLabels = labels(:,randIDX(801:1000));
+
+% Stratified k-fold cross-validation
+classifierNames = {'KNN','LSVM','RF'};
+for classifierIDX = 1:3
+    mAcc = []; 
     for k = 1:10
-        [pred, scores, tmpTimeTrain, tmpTimeTest] = featClassify(trainingData{k}', trainingLabels{k}', testingData{k}', classifierIDX);
-        timeTrain = [timeTrain; tmpTimeTrain];
-        timeTest = [timeTest; tmpTimeTest];
-        tAcc = sum(pred == testingLabels{k}')/length(testingLabels{k})
-        
-        % Compute PR per category
-        for categ = 1:10
-            tGT = double(testingLabels{k}' == categ);
-            tGT(find(tGT == 0)) = -1;
-            [tRec,tPrec,tInfo] = vl_pr(tGT,scores(:,categ));
-            
-%             for conf = 0:0.001:1
-%                 tPred = scores(:,categ) >= conf;
-%                 tGT = testingLabels{k}' == categ;
-%                 [tScores,sortIDX] = sort(scores(:,categ));
-%                 tPred = tPred(sortIDX); tGT = tGT(sortIDX);
-%                 if length(find(tPred)) == 0 || length(find(~tPred)) == 0
-%                     continue;
-%                 end
-%                 TP = sum((tGT(find(tPred))-tPred(find(tPred))) == 0)/length(find(tPred));
-%                 FP = sum((tGT(find(tPred))-tPred(find(tPred))) == -1)/length(find(tPred));
-%                 FN = sum((tGT(find(~tPred))-tPred(find(~tPred))) == 1)/length(find(~tPred));
-%                 tPrec = [tPrec;TP/(TP+FP)];
-%                 tRec = [tRec;TP/(TP+FN)];
-%             end
-%             ap =  sum(tPrec(2:end).*(tRec(2:end)-tRec(1:(end-1))));
-        end
-
+        [pred, scores, tmpTimeTrain, tmpTimeTest] = featClassify(cvTrainData{k}', cvTrainLabels{k}', cvTestData{k}', classifierIDX);
+        tAcc = sum(pred == cvTestLabels{k}')/length(cvTestLabels{k});
+        mAcc = [mAcc, tAcc];
     end
-    % fprintf('Accuracy (k-nearest neighbor): %f\n', mean(accuracy));
+    fprintf('Cross-Validation Generalization Accuracy (%s): %f\n', classifierNames{classifierIDX}, mean(mAcc));
 end
 
-% % Train multi-class linear SVM classifier
-% model = fitcecoc(trainingData',trainingLabels');
-% [pred,scores] = predict(model,testingData');
-% accuracy = sum(pred == testingLabels')/length(testingLabels);
-% fprintf('Accuracy (multi-class SVM): %f\n', accuracy);
 
+%         % Compute PR per category
+%         for categ = 1:10
+%             tGT = double(cvTestLabels{k}' == categ);
+%             tGT(find(tGT == 0)) = -1;
+%             [tRec,tPrec,tInfo] = vl_pr(tGT,scores(:,categ));
+%             tInfo.ap
+%         end
 
-% % Train random forest classifier
-% model = TreeBagger(100,trainingData',trainingLabels','MinLeafSize',5,'CrossVal','on');
-% [pred,scores] = predict(model,testingData');
-% pred = cellfun(@str2num,pred);
-% accuracy = sum(pred == testingLabels')/length(testingLabels);
-% fprintf('Accuracy (random forests): %f\n', accuracy);
 
 
