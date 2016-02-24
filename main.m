@@ -81,6 +81,9 @@ for classifierIDX = [4,5,8,11]
         allAP = [allAP,tInfo.ap];
     end
     
+    allAP
+    mean(allAP)
+    
     % Report numbers
     fprintf('Accuracy (%s): %f\n', classifierNames{classifierIDX}, acc);
     fprintf('Training runtime (%s): %f\n', classifierNames{classifierIDX}, tmpTimeTrain);
@@ -90,7 +93,7 @@ end
 classnames = {'Blues', 'Classical', 'Country', 'Disco', 'Hiphop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'};
 for categ = 1:10
     figure(categ); hold on; legend('KNN-cc','SVM-l','D-l','RF'); title(classnames{categ}); set(gca,'fontsize',14); xlabel('Recall'); ylabel('Precision'); 
-    if categ ~= 10
+    if categ ~= 11
         legend('KNN-cc','SVM-l','D-l','RF','Location','southwest');
     end
     hold off;

@@ -55,7 +55,7 @@ switch method
         timeTest = toc;
     case 8 % Multi-Class discriminant (linear)
         tic;
-        t = templateDiscriminant('DiscrimType','linear');
+        t = templateDiscriminant('DiscrimType','diagLinear');
         model = fitcecoc(trainingData,trainingLabels,'Learners',t);
         timeTrain = toc;
         tic;
