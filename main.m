@@ -35,46 +35,64 @@
 %     fv = [fv; demo_fv(GENDATA, 3, 3)];
 % end
 
-
 %% Classification
-% Stratified 10-fold cross validation (4:1 trainin:validation ratio)
-cvTrainData = {}; cvTrainLabels = {};
-cvTestData = {}; cvTestLabels = {};
-for k = 1:10
-    randIDX = randsample(1:length(data),length(data));
-    cvTrainData{k} = fv(:,randIDX(1:800));
-    cvTrainLabels{k} = labels(:,randIDX(1:800));
-    cvTestData{k} = fv(:,randIDX(801:1000));
-    cvTestLabels{k} = labels(:,randIDX(801:1000));
-end
+% % Stratified 10-fold cross validation (4:1 trainin:validation ratio)
+% cvTrainData = {}; cvTrainLabels = {};
+% cvTestData = {}; cvTestLabels = {};
+% for k = 1:10
+%     randIDX = randsample(1:length(data),length(data));
+%     cvTrainData{k} = fv(:,randIDX(1:800));
+%     cvTrainLabels{k} = labels(:,randIDX(1:800));
+%     cvTestData{k} = fv(:,randIDX(801:1000));
+%     cvTestLabels{k} = labels(:,randIDX(801:1000));
+% end
+% 
+% % Stratified k-fold cross-validation
+% classifierNames = {'KNN-ef','KNN-ec','KNN-cf','KNN-cc','SVM-l','SVM-q','NB','D-l','D-q','DT','RF','BDT'};
+% for classifierIDX = 1:12
+%     mAcc = []; 
+%     for k = 1:10
+%         [pred, scores, tmpTimeTrain, tmpTimeTest] = featClassify(cvTrainData{k}', cvTrainLabels{k}', cvTestData{k}', classifierIDX);
+%         tAcc = sum(pred == cvTestLabels{k}')/length(cvTestLabels{k});
+%         mAcc = [mAcc, tAcc];
+%     end
+%     fprintf('Cross-Validation Generalization Accuracy (%s): %f\n', classifierNames{classifierIDX}, mean(mAcc));
+% end
 
-% Final distribution: randomly split data ratio 4:1 training:testing
-randIDX = randsample(1:length(data),length(data));
-finTrainData = fv(:,randIDX(1:800));
-finTrainLabels = labels(:,randIDX(1:800));
-finTestData = fv(:,randIDX(801:1000));
-finTestLabels = labels(:,randIDX(801:1000));
+% % Final distribution: randomly split data ratio 4:1 training:testing
+% randIDX = randsample(1:length(data),length(data));
+% finTrainData = fv(:,randIDX(1:800));
+% finTrainLabels = labels(:,randIDX(1:800));
+% finTestData = fv(:,randIDX(801:1000));
+% finTestLabels = labels(:,randIDX(801:1000));
 
-% Stratified k-fold cross-validation
-classifierNames = {'KNN','LSVM','RF'};
-for classifierIDX = 1:3
-    mAcc = []; 
-    for k = 1:10
-        [pred, scores, tmpTimeTrain, tmpTimeTest] = featClassify(cvTrainData{k}', cvTrainLabels{k}', cvTestData{k}', classifierIDX);
-        tAcc = sum(pred == cvTestLabels{k}')/length(cvTestLabels{k});
-        mAcc = [mAcc, tAcc];
+for classifierIDX = [4,5,8,11]
+    runtimes = [];
+    [pred, scores, tmpTimeTrain, tmpTimeTest] = featClassify(finTrainData', finTrainLabels', finTestData', classifierIDX);
+    acc = sum(pred == finTestLabels')/length(finTestLabels);
+
+    % Compute PR per category
+    allAP = [];
+    for categ = 1:10
+        tGT = double(finTestLabels' == categ);
+        tGT(find(~tGT)) = -1;
+        [tRec,tPrec,tInfo] = vl_pr(tGT,scores(:,categ));
+        figure(categ); hold on; plot(tRec,tPrec,'LineWidth',3); axis equal; axis([0 1 0 1]); hold off;
+        allAP = [allAP,tInfo.ap];
     end
-    fprintf('Cross-Validation Generalization Accuracy (%s): %f\n', classifierNames{classifierIDX}, mean(mAcc));
+    
+    % Report numbers
+    fprintf('Accuracy (%s): %f\n', classifierNames{classifierIDX}, acc);
+    fprintf('Training runtime (%s): %f\n', classifierNames{classifierIDX}, tmpTimeTrain);
+    fprintf('Testing runtime (%s): %f\n', classifierNames{classifierIDX}, tmpTimeTest);
 end
 
-
-%         % Compute PR per category
-%         for categ = 1:10
-%             tGT = double(cvTestLabels{k}' == categ);
-%             tGT(find(tGT == 0)) = -1;
-%             [tRec,tPrec,tInfo] = vl_pr(tGT,scores(:,categ));
-%             tInfo.ap
-%         end
-
-
+classnames = {'Blues', 'Classical', 'Country', 'Disco', 'Hiphop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'};
+for categ = 1:10
+    figure(categ); hold on; legend('KNN-cc','SVM-l','D-l','RF'); title(classnames{categ}); set(gca,'fontsize',14); xlabel('Recall'); ylabel('Precision'); 
+    if categ ~= 10
+        legend('KNN-cc','SVM-l','D-l','RF','Location','southwest');
+    end
+    hold off;
+end
 
